@@ -1,6 +1,12 @@
+
 version: '3'
 
 services:
+  sonarqube:
+    image:  library/sonarqube:8.6-community
+    ports:
+      - "9000:9000"
+
   db:
     image:  mongo
     ports:

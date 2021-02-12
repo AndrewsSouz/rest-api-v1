@@ -37,8 +37,8 @@ public class UserController {
 
     @GetMapping("/{name}")
     @ResponseStatus(OK)
-    @ApiOperation("Find an user resource by namee")
-    public List<ControllerResponseUserDTO> findById(@PathVariable String name) {
+    @ApiOperation("Find an user resource by name")
+    public List<ControllerResponseUserDTO> findByName(@PathVariable String name) {
         var serviceResponse = userService.findByName(name);
         return serviceResponse.stream()
                 .map(MapperDTO::toControllerResponseUserDTO)

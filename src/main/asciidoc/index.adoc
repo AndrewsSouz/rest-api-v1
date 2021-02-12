@@ -1,0 +1,79 @@
+= Users Api Documentation
+
+== _The Response fields ever returned are:_
+include::../../../build/snippets/users/save/response-fields.adoc[]
+
+
+== #GET  /users#
+=== _Return all users in the database._
+
+==== Curl Request
+include::../../../build/snippets/users/list_all_users/curl-request.adoc[]
+
+==== Http Request
+include::../../../build/snippets/users/list_all_users/http-request.adoc[]
+
+==== Http Response
+include::../../../build/snippets/users/list_all_users/http-response.adoc[]
+
+==== Httpie Request
+include::../../../build/snippets/users/list_all_users/httpie-request.adoc[]
+
+==== Response Body
+include::../../../build/snippets/users/list_all_users/response-body.adoc[]
+
+== #GET  /users/{name}#
+=== _Return all users that match the string passed._
+
+==== Curl Request
+include::../../../build/snippets/users/find_by_name/curl-request.adoc[]
+
+==== Http Request
+include::../../../build/snippets/users/find_by_name/http-request.adoc[]
+
+==== Http Response
+include::../../../build/snippets/users/find_by_name/http-response.adoc[]
+
+==== Httpie Request
+include::../../../build/snippets/users/find_by_name/httpie-request.adoc[]
+
+==== Response Body
+include::../../../build/snippets/users/find_by_name/response-body.adoc[]
+
+== #POST  /users#
+=== Should save an user and return it, if you pass an ID it not will be persisted, same with admin atribute.
+
+==== Curl Request
+include::../../../build/snippets/users/save/curl-request.adoc[]
+
+==== Http Request
+include::../../../build/snippets/users/save/http-request.adoc[]
+
+==== Http Response
+include::../../../build/snippets/users/save/http-response.adoc[]
+
+==== Httpie Request
+include::../../../build/snippets/users/save/httpie-request.adoc[]
+
+==== Request Body
+include::../../../build/snippets/users/save/request-body.adoc[]
+
+==== Response Body
+include::../../../build/snippets/users/save/response-body.adoc[]
+
+
+== #DELETE  /users/{id}#
+=== Should delete an user and return nothing
+
+==== Curl Request
+include::../../../build/snippets/users/delete/curl-request.adoc[]
+
+==== Http Request
+include::../../../build/snippets/users/delete/http-request.adoc[]
+
+==== Http Response
+include::../../../build/snippets/users/delete/http-response.adoc[]
+
+==== Httpie Request
+include::../../../build/snippets/users/delete/httpie-request.adoc[]
+

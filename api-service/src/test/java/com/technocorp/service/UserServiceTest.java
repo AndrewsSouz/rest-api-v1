@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,11 +28,8 @@ import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    private List<User> listResponse = new ArrayList<>();
-    private List<User> emptyList = new ArrayList<>();
     private ServiceRequestUserDTO requestUserDTO;
     private User user;
-    private User user2;
 
     @Mock
     UserRepository userRepository;
@@ -52,17 +50,6 @@ class UserServiceTest {
                 .admin(false)
                 .build();
 
-        this.user2 = User.builder()
-                .id("2")
-                .name("And")
-                .surname("Souza")
-                .age("20")
-                .cpf("123")
-                .login("ze")
-                .password("123")
-                .admin(false)
-                .build();
-
         this.requestUserDTO = ServiceRequestUserDTO.builder()
                 .id(this.user.getId())
                 .name(this.user.getName())
@@ -73,15 +60,13 @@ class UserServiceTest {
                 .password(this.user.getPassword())
                 .build();
 
-        listResponse.add(this.user);
-        listResponse.add(this.user2);
     }
 
     @Test
-    void whenFindAll_ThenTestReturn() {
-        when(userRepository.findAll()).thenReturn(listResponse);
+    void whenFindAllShouldReturnAListOfUsers() {
+        when(userRepository.findAll()).thenReturn(Arrays.asList(this.user));
         var stubActual = userService.listAllUsers();
-        var stubExpected = listResponse.stream()
+        var stubExpected = Arrays.asList(this.user).stream()
                 .map(dto -> ServiceResponseUserDTO.builder()
                         .id(dto.getId())
                         .name(dto.getName())
@@ -95,11 +80,11 @@ class UserServiceTest {
     }
 
     @Test
-    void whenFindByName_ThenTestReturn() {
-        when(userRepository.findByNameIgnoreCase(this.user.getName())).thenReturn(listResponse);
+    void whenFindByNameShouldReturnAListOfUsersThatMatchTheName() {
+        when(userRepository.findByNameIgnoreCase(this.user.getName())).thenReturn(Arrays.asList(this.user));
         var stubActual = userService.findByName(this.user.getName());
-        var stubExpected = listResponse.stream().map(
-                dto -> ServiceResponseUserDTO.builder()
+        var stubExpected = Arrays.asList(this.user).stream()
+                .map(dto -> ServiceResponseUserDTO.builder()
                         .id(dto.getId())
                         .name(dto.getName())
                         .surname(dto.getSurname())
@@ -112,7 +97,7 @@ class UserServiceTest {
     }
 
     @Test
-    void whenSave_ThenTestIfWasSaved() {
+    void whenSaveShouldReturnTheSavedUser() {
         var stubUser = this.user;
         stubUser.setId(null);
         when(userRepository.save(stubUser)).thenReturn(this.user);
@@ -130,7 +115,7 @@ class UserServiceTest {
     }
 
     @Test
-    void whenUpdate_ThenTestIdWasUpdated() {
+    void whenUpdateShouldReturnTheUpdatedUser() {
         when(userRepository.existsById(this.user.getId())).thenReturn(true);
         when(userRepository.save(this.user)).thenReturn(this.user);
         var stubActual = userService.update(this.requestUserDTO);
@@ -146,46 +131,45 @@ class UserServiceTest {
     }
 
     @Test
-    void whenDeleteById_ThenTestIfWasDeleted() {
+    void whenDeleteByIdShouldReturnNothing() {
         when(userRepository.existsById(this.user.getId())).thenReturn(true);
         userService.deleteById(this.user.getId());
         verify(userRepository, times(1)).deleteById(this.user.getId());
     }
 
     @Test
-    void whenFindAllReturnEmptyList_ThenExceptionIsThrown() {
-        when(userRepository.findAll()).thenReturn(emptyList);
+    void whenFindAllReturnEmptyListShouldThrownException() {
+        when(userRepository.findAll()).thenReturn(Arrays.asList());
         var thrown = assertThrows(ResponseStatusException.class, () -> userService.listAllUsers());
         assertEquals(HttpStatus.NO_CONTENT, thrown.getStatus());
     }
 
     @Test
-    void whenFindByNameThatNotExists_ThenExceptionIsThrown() {
-        when(userRepository.findByNameIgnoreCase("Zé")).thenReturn(emptyList);
+    void whenFindByNameThatNotExistsShouldThrownException() {
+        when(userRepository.findByNameIgnoreCase("Zé")).thenReturn(Arrays.asList());
         var thrown = assertThrows(ResponseStatusException.class, () -> userService.findByName("Zé"));
         assertEquals(HttpStatus.NOT_FOUND, thrown.getStatus());
     }
 
     @Test
-    void whenUpdateById_ThenExceptionIsThrown() {
+    void whenUpdateByIdShouldThrownException() {
         when(userRepository.existsById(this.requestUserDTO.getId())).thenReturn(false);
         var thrown = assertThrows(ResponseStatusException.class, () -> userService.update(this.requestUserDTO));
         assertEquals(HttpStatus.NOT_FOUND, thrown.getStatus());
     }
 
     @Test
-    @Disabled
-        //Not Working
-    void whenUserNotSaved_ThenExceptionIsThrown() {
+    @Disabled("Not Working")
+
+    void whenUserNotSavedShouldThrownException() {
         when(userService.save(this.requestUserDTO)).thenReturn(null);
         var thrown = assertThrows(ResponseStatusException.class, () -> userService.save(this.requestUserDTO));
         assertEquals(BAD_GATEWAY, thrown.getStatus());
     }
 
     @Test
-    @Disabled
-        // Not Working
-    void whenDeleteByIdWithIdNotFound_ThenTestThrownException() {
+    @Disabled("Not Working")
+    void whenDeleteByIdNotFoundShouldThrownException() {
         when(userRepository.existsById(this.requestUserDTO.getId())).thenReturn(false);
         var thrown = assertThrows(ResponseStatusException.class, () -> userService.deleteById(this.user.getId()));
         assertEquals(HttpStatus.NOT_FOUND, thrown.getStatus());

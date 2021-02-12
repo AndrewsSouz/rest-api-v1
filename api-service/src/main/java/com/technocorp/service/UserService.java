@@ -49,7 +49,7 @@ public class UserService {
         var responseUser = userRepository.save(requestUser);
 
         return Optional.ofNullable(MapperDTO.toServiceResponseUserDTO(responseUser))
-                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST));
+                .orElseThrow(() -> new ResponseStatusException(SERVICE_UNAVAILABLE));
     }
 
     public ServiceResponseUserDTO update(ServiceRequestUserDTO requestDTO) {
