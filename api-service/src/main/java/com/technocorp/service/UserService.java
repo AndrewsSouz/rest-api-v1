@@ -1,38 +1,76 @@
 package com.technocorp.service;
 
-import com.technocorp.model.dto.UserResponseDTO;
 import com.technocorp.repository.UserRepository;
+import com.technocorp.service.servicedto.MapperDTO;
+import com.technocorp.service.servicedto.ServiceRequestUserDTO;
+import com.technocorp.service.servicedto.ServiceResponseUserDTO;
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.springframework.http.HttpStatus.*;
+
+@Service
 @AllArgsConstructor
 public class UserService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    public List<UserResponseDTO> listAllUsers() {
+    public List<ServiceResponseUserDTO> listAllUsers() {
         var user = userRepository.findAll();
-        return user.stream()
-                .map(dto -> UserResponseDTO.builder()
-                        .name(dto.getName())
-                        .surname(dto.getSurname())
-                        .age(dto.getAge())
-                        .cpf(dto.getCpf())
-                        .admin(dto.isAdmin())
-                        .build())
+        var response = user.stream().map(
+                dto -> Optional.ofNullable(MapperDTO.toServiceResponseUserDTO(dto))
+                        .orElse(new ServiceResponseUserDTO()))
                 .collect(Collectors.toList());
+        if (response.isEmpty()) {
+            throw new ResponseStatusException(NO_CONTENT);
+        }
+        return response;
     }
 
-    public UserResponseDTO findByName(String name) {
+    public List<ServiceResponseUserDTO> findByName(String name) {
         var user = userRepository.findByNameIgnoreCase(name);
-        return UserResponseDTO.builder()
-                .name(user.getName())
-                .age(user.getAge())
-                .cpf(user.getCpf())
-                .surname(user.getSurname())
-                .admin(user.isAdmin())
-                .build();
+        var response = user.stream().map(
+                dto -> Optional.ofNullable(MapperDTO.toServiceResponseUserDTO(dto))
+                        .orElse(new ServiceResponseUserDTO()))
+                .collect(Collectors.toList());
+        if (response.isEmpty()) {
+            throw new ResponseStatusException(NOT_FOUND);
+        }
+        return response;
     }
+
+    public ServiceResponseUserDTO save(ServiceRequestUserDTO requestDTO) {
+        var requestUser = MapperDTO.toUserSave(requestDTO);
+        var responseUser = userRepository.save(requestUser);
+
+        return Optional.ofNullable(MapperDTO.toServiceResponseUserDTO(responseUser))
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST));
+    }
+
+    public ServiceResponseUserDTO update(ServiceRequestUserDTO requestDTO) {
+        var exists = userRepository.existsById(requestDTO.getId());
+        if (!exists) {
+            throw new ResponseStatusException(NOT_FOUND);
+        }
+
+        var requestUser = MapperDTO.toUserUpdate(requestDTO);
+        var responseUser = userRepository.save(requestUser);
+
+        return Optional.ofNullable(MapperDTO.toServiceResponseUserDTO(responseUser))
+                .orElseThrow(() -> new ResponseStatusException(SERVICE_UNAVAILABLE));
+    }
+
+    public void deleteById(String id) {
+        var exists = userRepository.existsById(id);
+        if (!exists) {
+            throw new ResponseStatusException(NOT_FOUND);
+        }
+        userRepository.deleteById(id);
+    }
+
 }

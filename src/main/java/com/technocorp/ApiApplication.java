@@ -1,4 +1,4 @@
-package com.technocorp.api;
+package com.technocorp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
