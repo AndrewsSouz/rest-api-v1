@@ -5,7 +5,6 @@ import com.technocorp.repository.UserRepository;
 import com.technocorp.service.servicedto.ServiceRequestUserDTO;
 import com.technocorp.service.servicedto.ServiceResponseUserDTO;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,19 +13,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class UserServiceImplTest {
 
     private ServiceRequestUserDTO requestUserDTO;
     private User user;
@@ -35,7 +31,7 @@ class UserServiceTest {
     UserRepository userRepository;
 
     @InjectMocks
-    UserService userService;
+    UserServiceImpl userServiceImpl;
 
     @BeforeEach
     void setup() {
@@ -51,7 +47,6 @@ class UserServiceTest {
                 .build();
 
         this.requestUserDTO = ServiceRequestUserDTO.builder()
-                .id(this.user.getId())
                 .name(this.user.getName())
                 .surname(this.user.getSurname())
                 .age(this.user.getAge())
@@ -64,9 +59,9 @@ class UserServiceTest {
 
     @Test
     void whenFindAllShouldReturnAListOfUsers() {
-        when(userRepository.findAll()).thenReturn(Arrays.asList(this.user));
-        var stubActual = userService.listAllUsers();
-        var stubExpected = Arrays.asList(this.user).stream()
+        when(userRepository.findAll()).thenReturn(Collections.singletonList(this.user));
+        var stubActual = userServiceImpl.findAll();
+        var stubExpected = Stream.of(this.user)
                 .map(dto -> ServiceResponseUserDTO.builder()
                         .id(dto.getId())
                         .name(dto.getName())
@@ -81,9 +76,9 @@ class UserServiceTest {
 
     @Test
     void whenFindByNameShouldReturnAListOfUsersThatMatchTheName() {
-        when(userRepository.findByNameIgnoreCase(this.user.getName())).thenReturn(Arrays.asList(this.user));
-        var stubActual = userService.findByName(this.user.getName());
-        var stubExpected = Arrays.asList(this.user).stream()
+        when(userRepository.findByNameIgnoreCase(this.user.getName())).thenReturn(Collections.singletonList(this.user));
+        var stubActual = userServiceImpl.findByName(this.user.getName());
+        var stubExpected = Stream.of(this.user)
                 .map(dto -> ServiceResponseUserDTO.builder()
                         .id(dto.getId())
                         .name(dto.getName())
@@ -102,7 +97,7 @@ class UserServiceTest {
         stubUser.setId(null);
         when(userRepository.save(stubUser)).thenReturn(this.user);
         this.requestUserDTO.setId(null);
-        var stubActual = userService.save(this.requestUserDTO);
+        var stubActual = userServiceImpl.save(this.requestUserDTO);
         var stubExpected = ServiceResponseUserDTO.builder()
                 .id(this.user.getId())
                 .name(this.user.getName())
@@ -118,7 +113,7 @@ class UserServiceTest {
     void whenUpdateShouldReturnTheUpdatedUser() {
         when(userRepository.existsById(this.user.getId())).thenReturn(true);
         when(userRepository.save(this.user)).thenReturn(this.user);
-        var stubActual = userService.update(this.requestUserDTO);
+        var stubActual = userServiceImpl.update("1", this.requestUserDTO);
         var stubExpected = ServiceResponseUserDTO.builder()
                 .id(this.user.getId())
                 .name(this.user.getName())
@@ -131,47 +126,39 @@ class UserServiceTest {
     }
 
     @Test
-    void whenDeleteByIdShouldReturnNothing() {
-        when(userRepository.existsById(this.user.getId())).thenReturn(true);
-        userService.deleteById(this.user.getId());
-        verify(userRepository, times(1)).deleteById(this.user.getId());
+    void whenUpdateShouldThrowAnException() {
+        when(userRepository.existsById(this.user.getId())).thenReturn(false);
+        var thrown = assertThrows(ResponseStatusException.class,
+                () -> userServiceImpl.update("1", this.requestUserDTO));
+        assertEquals(HttpStatus.NOT_FOUND, thrown.getStatus());
     }
 
     @Test
     void whenFindAllReturnEmptyListShouldThrownException() {
-        when(userRepository.findAll()).thenReturn(Arrays.asList());
-        var thrown = assertThrows(ResponseStatusException.class, () -> userService.listAllUsers());
+        when(userRepository.findAll()).thenReturn(Collections.emptyList());
+        var thrown = assertThrows(ResponseStatusException.class, () -> userServiceImpl.findAll());
         assertEquals(HttpStatus.NO_CONTENT, thrown.getStatus());
     }
 
     @Test
     void whenFindByNameThatNotExistsShouldThrownException() {
-        when(userRepository.findByNameIgnoreCase("Zé")).thenReturn(Arrays.asList());
-        var thrown = assertThrows(ResponseStatusException.class, () -> userService.findByName("Zé"));
+        when(userRepository.findByNameIgnoreCase("Zé")).thenReturn(Collections.emptyList());
+        var thrown = assertThrows(ResponseStatusException.class, () -> userServiceImpl.findByName("Zé"));
         assertEquals(HttpStatus.NOT_FOUND, thrown.getStatus());
     }
 
     @Test
-    void whenUpdateByIdShouldThrownException() {
-        when(userRepository.existsById(this.requestUserDTO.getId())).thenReturn(false);
-        var thrown = assertThrows(ResponseStatusException.class, () -> userService.update(this.requestUserDTO));
-        assertEquals(HttpStatus.NOT_FOUND, thrown.getStatus());
+    void whenDeleteByIdShouldReturnNothing() {
+        when(userRepository.existsById(this.user.getId())).thenReturn(true);
+        userServiceImpl.deleteById(this.user.getId());
+        verify(userRepository, times(1)).deleteById(this.user.getId());
     }
 
     @Test
-    @Disabled("Not Working")
-
-    void whenUserNotSavedShouldThrownException() {
-        when(userService.save(this.requestUserDTO)).thenReturn(null);
-        var thrown = assertThrows(ResponseStatusException.class, () -> userService.save(this.requestUserDTO));
-        assertEquals(BAD_GATEWAY, thrown.getStatus());
-    }
-
-    @Test
-    @Disabled("Not Working")
     void whenDeleteByIdNotFoundShouldThrownException() {
-        when(userRepository.existsById(this.requestUserDTO.getId())).thenReturn(false);
-        var thrown = assertThrows(ResponseStatusException.class, () -> userService.deleteById(this.user.getId()));
+        when(userRepository.existsById(this.user.getId())).thenReturn(false);
+        var thrown = assertThrows(ResponseStatusException.class,
+                () -> userServiceImpl.deleteById("1"));
         assertEquals(HttpStatus.NOT_FOUND, thrown.getStatus());
     }
 

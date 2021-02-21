@@ -3,7 +3,7 @@ package com.technocorp.controller;
 import com.technocorp.controller.dto.ControllerRequestUserDTO;
 import com.technocorp.controller.dto.ControllerResponseUserDTO;
 import com.technocorp.model.User;
-import com.technocorp.service.UserService;
+import com.technocorp.service.UserServiceImpl;
 import com.technocorp.service.servicedto.ServiceRequestUserDTO;
 import com.technocorp.service.servicedto.ServiceResponseUserDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +29,7 @@ class UserControllerTest {
     private ServiceResponseUserDTO serviceResponseUserDTO;
 
     @Mock
-    UserService userService;
+    UserServiceImpl userServiceImpl;
 
     @InjectMocks
     UserController userController;
@@ -49,7 +49,6 @@ class UserControllerTest {
                 .build();
 
         this.requestUserDTO = ControllerRequestUserDTO.builder()
-                .id(user.getId())
                 .name(user.getName())
                 .surname(user.getSurname())
                 .age(user.getAge())
@@ -67,7 +66,6 @@ class UserControllerTest {
                 .build();
 
         this.serviceRequestUserDTO = ServiceRequestUserDTO.builder()
-                .id(user.getId())
                 .name(user.getName())
                 .surname(user.getSurname())
                 .age(user.getAge())
@@ -90,9 +88,9 @@ class UserControllerTest {
     @Test
     @DisplayName("Should return a list of users")
     void whenFindAllshouldReturnAListOfUsers() {
-        when(userService.listAllUsers()).thenReturn(Arrays.asList(serviceResponseUserDTO));
+        when(userServiceImpl.findAll()).thenReturn(Arrays.asList(serviceResponseUserDTO));
         var stubActual = userController.listAllUsers();
-        var stubExpected =  Arrays.asList(this.responseUserDTO).stream()
+        var stubExpected = Arrays.asList(this.responseUserDTO).stream()
                 .map(dto -> ControllerResponseUserDTO.builder()
                         .id(dto.getId())
                         .name(dto.getName())
@@ -102,15 +100,15 @@ class UserControllerTest {
                         .admin(dto.isAdmin())
                         .build())
                 .collect(Collectors.toList());
-        assertEquals(stubExpected,stubActual);
+        assertEquals(stubExpected, stubActual);
     }
 
     @Test
     @DisplayName("Should return a list of users that match the name")
     void whenFindByIdShouldReturnAListOfUsersThatMatchTheName() {
-        when(userService.findByName(this.requestUserDTO.getName())).thenReturn(Arrays.asList(serviceResponseUserDTO));
+        when(userServiceImpl.findByName(this.requestUserDTO.getName())).thenReturn(Arrays.asList(serviceResponseUserDTO));
         var stubActual = userController.findByName(this.requestUserDTO.getName());
-        var stubExpected =  Arrays.asList(this.responseUserDTO).stream()
+        var stubExpected = Arrays.asList(this.responseUserDTO).stream()
                 .map(dto -> ControllerResponseUserDTO.builder()
                         .id(dto.getId())
                         .name(dto.getName())
@@ -120,15 +118,13 @@ class UserControllerTest {
                         .admin(dto.isAdmin())
                         .build())
                 .collect(Collectors.toList());
-        assertEquals(stubExpected,stubActual);
+        assertEquals(stubExpected, stubActual);
     }
 
     @Test
     @DisplayName("Should return the saved user")
-    void whenSaveShouldReturnTheUserSaved(){
-        this.requestUserDTO.setId(null);
-        this.serviceRequestUserDTO.setId(null);
-        when(userService.save(this.serviceRequestUserDTO)).thenReturn(this.serviceResponseUserDTO);
+    void whenSaveShouldReturnTheUserSaved() {
+        when(userServiceImpl.save(this.serviceRequestUserDTO)).thenReturn(this.serviceResponseUserDTO);
         var stubActual = userController.save(this.requestUserDTO);
         var stubExpected = ControllerResponseUserDTO.builder()
                 .id(this.serviceResponseUserDTO.getId())
@@ -138,14 +134,14 @@ class UserControllerTest {
                 .cpf(this.serviceResponseUserDTO.getCpf())
                 .admin(this.serviceResponseUserDTO.isAdmin())
                 .build();
-        assertEquals(stubExpected,stubActual);
+        assertEquals(stubExpected, stubActual);
     }
 
     @Test
     @DisplayName("Should return the updated user")
-    void whenUpdateShouldReturnTheUserUpdated(){
-        when(userService.save(this.serviceRequestUserDTO)).thenReturn(this.serviceResponseUserDTO);
-        var stubActual = userController.save(this.requestUserDTO);
+    void whenUpdateShouldReturnTheUserUpdated() {
+        when(userServiceImpl.update("1", this.serviceRequestUserDTO)).thenReturn(this.serviceResponseUserDTO);
+        var stubActual = userController.update("1", this.requestUserDTO);
         var stubExpected = ControllerResponseUserDTO.builder()
                 .id(this.responseUserDTO.getId())
                 .name(this.responseUserDTO.getName())
@@ -154,16 +150,15 @@ class UserControllerTest {
                 .cpf(this.responseUserDTO.getCpf())
                 .admin(this.responseUserDTO.isAdmin())
                 .build();
-        assertEquals(stubExpected,stubActual);
+        assertEquals(stubExpected, stubActual);
     }
 
     @Test
     @DisplayName("Should verify if the delete method is acessed")
-    void whenDeleteByIdShouldReturnNothing(){
-        userController.deleteById(this.requestUserDTO.getId());
-        verify(userService,times(1)).deleteById(this.requestUserDTO.getId());
+    void whenDeleteByIdShouldReturnNothing() {
+        userController.deleteById("1");
+        verify(userServiceImpl, times(1)).deleteById("1");
     }
-
 
 
 }

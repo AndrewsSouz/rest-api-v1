@@ -11,7 +11,6 @@ public class MapperDTO {
             ControllerRequestUserDTO requestUserDTO){
 
         return ServiceRequestUserDTO.builder()
-                .id(requestUserDTO.getId())
                 .name(requestUserDTO.getName())
                 .surname(requestUserDTO.getSurname())
                 .age(requestUserDTO.getAge())

@@ -1,5 +1,6 @@
 package com.technocorp.service.servicedto;
 
+
 import com.technocorp.model.User;
 
 public class MapperDTO {
@@ -19,7 +20,6 @@ public class MapperDTO {
 
     public static User toUserSave(ServiceRequestUserDTO requestUserDTO){
         return User.builder()
-                .id(requestUserDTO.getId())
                 .name(requestUserDTO.getName())
                 .login(requestUserDTO.getLogin())
                 .password(requestUserDTO.getPassword())
@@ -29,9 +29,9 @@ public class MapperDTO {
                 .build();
     }
 
-    public static User toUserUpdate(ServiceRequestUserDTO requestUserDTO){
+    public static User toUserUpdate(String id,ServiceRequestUserDTO requestUserDTO){
         return User.builder()
-                .id(requestUserDTO.getId())
+                .id(id)
                 .name(requestUserDTO.getName())
                 .login(requestUserDTO.getLogin())
                 .password(requestUserDTO.getPassword())

@@ -8,9 +8,9 @@ plugins {
 }
 
 dependencies {
-    implementation project(":api-controller")
-    implementation project(":api-model")
-    implementation project(":api-service")
+    implementation project(':api-controller')
+    implementation project(':api-service')
+    implementation project(':api-persistence')
     asciidoctor 'org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.5.RELEASE'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 
@@ -21,6 +21,9 @@ sonarqube {
         property 'sonar.host.url', 'http://localhost:9000'
         property 'sonar.login', 'admin'
         property 'sonar.password', '260117'
+        property 'sonar.coverage.exclusions', [
+                'src/main/java/com/technocorp/config/SwaggerConfig.java',
+                'src/main/java/com/technocorp/ApiApplication.java']
     }
 }
 
@@ -49,15 +52,17 @@ tasks.register("codeCoverageReport", JacocoReport) {
         }
     }
 
-    // enable the different report types (html, xml, csv)
     reports {
-        // xml is usually used to integrate code coverage with
-        // other tools like SonarQube, Coveralls or Codecov
         xml.enabled true
-
-        // HTML reports can be used to see code coverage
-        // without any external tools
         html.enabled true
+    }
+}
+
+jacocoTestReport {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['src/main/java/com/technocorp/config'])
+        }))
     }
 }
 
@@ -92,6 +97,7 @@ allprojects {
         implementation 'io.springfox:springfox-swagger2:2.9.2'
         implementation 'io.springfox:springfox-swagger-ui:2.9.2'
         implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation('org.springframework.boot:spring-boot-starter-test') {
@@ -108,14 +114,10 @@ allprojects {
 subprojects {
     dependencies {
         implementation 'org.projectlombok:lombok:1.18.16'
-        implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     }
 }
 
-project(':api-repository'){
-    dependencies {
-        implementation project(':api-model')
-    }
+project(':api-persistence') {
     bootJar {
         enabled = false
     }
@@ -124,7 +126,7 @@ project(':api-repository'){
     }
 }
 
-project(':api-service'){
+project(':api-service') {
 
     apply plugin: 'jacoco'
 
@@ -135,27 +137,17 @@ project(':api-service'){
         enabled = true
     }
     dependencies {
-        implementation project(':api-repository')
-        implementation project(':api-model')
+        implementation project(':api-persistence')
     }
 }
 
-project(':api-model'){
-    bootJar {
-        enabled = false
-    }
-    jar {
-        enabled = true
-    }
-}
-
-project(':api-controller'){
+project(':api-controller') {
 
     apply plugin: 'jacoco'
 
     dependencies {
         implementation project(":api-service")
-        implementation project(":api-model")
+        implementation project(":api-persistence")
     }
 
     bootJar {
