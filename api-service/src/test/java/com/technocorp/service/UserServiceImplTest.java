@@ -76,7 +76,7 @@ class UserServiceImplTest {
 
     @Test
     void whenFindByNameShouldReturnAListOfUsersThatMatchTheName() {
-        when(userRepository.findByNameIgnoreCase(this.user.getName())).thenReturn(Collections.singletonList(this.user));
+        when(userRepository.findByNameIgnoreCaseContaining(this.user.getName())).thenReturn(Collections.singletonList(this.user));
         var stubActual = userServiceImpl.findByName(this.user.getName());
         var stubExpected = Stream.of(this.user)
                 .map(dto -> ServiceResponseUserDTO.builder()
@@ -142,7 +142,7 @@ class UserServiceImplTest {
 
     @Test
     void whenFindByNameThatNotExistsShouldThrownException() {
-        when(userRepository.findByNameIgnoreCase("Zé")).thenReturn(Collections.emptyList());
+        when(userRepository.findByNameIgnoreCaseContaining("Zé")).thenReturn(Collections.emptyList());
         var thrown = assertThrows(ResponseStatusException.class, () -> userServiceImpl.findByName("Zé"));
         assertEquals(HttpStatus.NOT_FOUND, thrown.getStatus());
     }

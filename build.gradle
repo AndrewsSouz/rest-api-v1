@@ -16,144 +16,151 @@ dependencies {
 
 }
 
+//SonarQube access properties
 sonarqube {
     properties {
         property 'sonar.host.url', 'http://localhost:9000'
         property 'sonar.login', 'admin'
         property 'sonar.password', '260117'
-        property 'sonar.coverage.exclusions', [
-                'src/main/java/com/technocorp/config/SwaggerConfig.java',
-                'src/main/java/com/technocorp/ApiApplication.java']
     }
-}
 
 // task to gather code coverage from multiple subprojects
 // NOTE: the `JacocoReport` tasks do *not* depend on the `test` task by default. Meaning you have to ensure
 // that `test` (or other tasks generating code coverage) run before generating the report.
 // You can achieve this by calling the `test` lifecycle task manually
 // $ ./gradlew test codeCoverageReport
-tasks.register("codeCoverageReport", JacocoReport) {
-    // If a subproject applies the 'jacoco' plugin, add the result it to the report
+    tasks.register("codeCoverageReport", JacocoReport) {
+        // If a subproject applies the 'jacoco' plugin, add the result it to the report
 
-    subprojects { subproject ->
-        subproject.plugins.withType(JacocoPlugin).configureEach {
-            subproject.tasks.matching({ t -> t.extensions.findByType(JacocoTaskExtension) }).configureEach { testTask ->
-                sourceSets subproject.sourceSets.main
-                executionData(testTask)
+        subprojects { subproject ->
+            subproject.plugins.withType(JacocoPlugin).configureEach {
+                subproject.tasks.matching({ t -> t.extensions.findByType(JacocoTaskExtension) }).configureEach { testTask ->
+                    sourceSets subproject.sourceSets.main
+                    executionData(testTask)
+                }
+
+                // To automatically run `test` every time `./gradlew codeCoverageReport` is called,
+                // you may want to set up a task dependency between them as shown below.
+                // Note that this requires the `test` tasks to be resolved eagerly (see `forEach`) which
+                // may have a negative effect on the configuration time of your build.
+                subproject.tasks.matching({ t -> t.extensions.findByType(JacocoTaskExtension) }).forEach {
+                    rootProject.tasks.codeCoverageReport.dependsOn(it)
+                }
             }
+        }
 
-            // To automatically run `test` every time `./gradlew codeCoverageReport` is called,
-            // you may want to set up a task dependency between them as shown below.
-            // Note that this requires the `test` tasks to be resolved eagerly (see `forEach`) which
-            // may have a negative effect on the configuration time of your build.
-            subproject.tasks.matching({ t -> t.extensions.findByType(JacocoTaskExtension) }).forEach {
-                rootProject.tasks.codeCoverageReport.dependsOn(it)
+        reports {
+            xml.enabled true
+            html.enabled true
+        }
+    }
+
+//Exclude classes from jacoco report.
+    jacocoTestReport {
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: ['src/main/java/com/technocorp/config'])
+            }))
+        }
+    }
+
+    allprojects {
+
+        apply plugin: 'org.springframework.boot'
+        apply plugin: 'io.spring.dependency-management'
+        apply plugin: 'java'
+
+
+        group = 'com.technocorp'
+        version = '0.0.1-SNAPSHOT'
+        sourceCompatibility = '11'
+
+        repositories {
+            mavenCentral()
+        }
+
+        configurations {
+            compileOnly {
+                extendsFrom annotationProcessor
             }
         }
+
+        dependencyManagement {
+            imports {
+                mavenBom('org.springframework.boot:spring-boot-dependencies:2.4.0')
+            }
+        }
+
+        dependencies {
+            implementation 'io.springfox:springfox-swagger2:2.9.2'
+            implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+            implementation 'org.springframework.boot:spring-boot-starter-web'
+            implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+            compileOnly 'org.projectlombok:lombok'
+            annotationProcessor 'org.projectlombok:lombok'
+            testImplementation('org.springframework.boot:spring-boot-starter-test') {
+                exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+            }
+        }
+
+        test {
+            useJUnitPlatform()
+        }
+
     }
 
-    reports {
-        xml.enabled true
-        html.enabled true
-    }
-}
+    project(':api-controller') {
 
-jacocoTestReport {
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: ['src/main/java/com/technocorp/config'])
-        }))
-    }
-}
+        apply plugin: 'jacoco'
 
-allprojects {
+        dependencies {
+            implementation project(":api-service")
+            implementation project(":api-persistence")
+            implementation project(":api-exception")
+        }
 
-    apply plugin: 'org.springframework.boot'
-    apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'java'
-
-
-    group = 'com.technocorp'
-    version = '0.0.1-SNAPSHOT'
-    sourceCompatibility = '11'
-
-    repositories {
-        mavenCentral()
-    }
-
-    configurations {
-        compileOnly {
-            extendsFrom annotationProcessor
+        bootJar {
+            enabled = false
+        }
+        jar {
+            enabled = true
         }
     }
 
-    dependencyManagement {
-        imports {
-            mavenBom('org.springframework.boot:spring-boot-dependencies:2.4.0')
+    project(':api-exception') {
+        bootJar {
+            enabled = false
+        }
+        jar {
+            enabled = true
         }
     }
 
-    dependencies {
-        implementation 'io.springfox:springfox-swagger2:2.9.2'
-        implementation 'io.springfox:springfox-swagger-ui:2.9.2'
-        implementation 'org.springframework.boot:spring-boot-starter-web'
-        implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.projectlombok:lombok'
-        testImplementation('org.springframework.boot:spring-boot-starter-test') {
-            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    project(':api-persistence') {
+        bootJar {
+            enabled = false
+        }
+        jar {
+            enabled = true
         }
     }
 
-    test {
-        useJUnitPlatform()
-    }
+    project(':api-service') {
 
-}
+        apply plugin: 'jacoco'
 
-subprojects {
-    dependencies {
-        implementation 'org.projectlombok:lombok:1.18.16'
-    }
-}
+        dependencies {
+            implementation project(":api-exception")
+        }
 
-project(':api-persistence') {
-    bootJar {
-        enabled = false
-    }
-    jar {
-        enabled = true
-    }
-}
-
-project(':api-service') {
-
-    apply plugin: 'jacoco'
-
-    bootJar {
-        enabled = false
-    }
-    jar {
-        enabled = true
-    }
-    dependencies {
-        implementation project(':api-persistence')
-    }
-}
-
-project(':api-controller') {
-
-    apply plugin: 'jacoco'
-
-    dependencies {
-        implementation project(":api-service")
-        implementation project(":api-persistence")
-    }
-
-    bootJar {
-        enabled = false
-    }
-    jar {
-        enabled = true
+        bootJar {
+            enabled = false
+        }
+        jar {
+            enabled = true
+        }
+        dependencies {
+            implementation project(':api-persistence')
+        }
     }
 }

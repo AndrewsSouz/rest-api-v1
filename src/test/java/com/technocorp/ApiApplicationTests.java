@@ -1,11 +1,9 @@
 package com.technocorp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.technocorp.controller.UserController;
 import com.technocorp.controller.dto.ControllerRequestUserDTO;
 import com.technocorp.controller.dto.ControllerResponseUserDTO;
 import com.technocorp.model.User;
-import com.technocorp.repository.UserRepository;
 import com.technocorp.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,13 +31,7 @@ class ApiApplicationTests {
     ControllerRequestUserDTO requestUserDTO;
 
     @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    UserServiceImpl userservice;
-
-    @Autowired
-    UserController usercontroller;
+    UserServiceImpl userService;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -59,8 +51,7 @@ class ApiApplicationTests {
                 .password("123")
                 .admin(false)
                 .build();
-
-        responseUserDTO = ControllerResponseUserDTO.builder()
+        this.responseUserDTO = ControllerResponseUserDTO.builder()
                 .id(this.user.getId())
                 .name(this.user.getName())
                 .surname(this.user.getSurname())
@@ -68,7 +59,7 @@ class ApiApplicationTests {
                 .cpf(this.user.getCpf())
                 .admin(this.user.isAdmin())
                 .build();
-        requestUserDTO = ControllerRequestUserDTO.builder()
+        this.requestUserDTO = ControllerRequestUserDTO.builder()
                 .name(user.getName())
                 .surname(user.getSurname())
                 .age(user.getAge())
@@ -133,12 +124,12 @@ class ApiApplicationTests {
 
     @Test
     void shouldReturnTheUpdatedUser() throws Exception {
-        var userToBeDeleted = userservice.findAll();
-        String id = userToBeDeleted.get(0).getId();
+        var userToBeUpdated = userService.findAll();
+        String id = userToBeUpdated.get(0).getId();
         //Request;
         var result = mockmvc.perform(put("/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .param("id",id)
+                .param("id", id)
                 .content(objectMapper.writeValueAsString(requestUserDTO)))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -154,13 +145,12 @@ class ApiApplicationTests {
 
     @Test
     void shouldDeleteAUserAndReturnNOCONTENT() throws Exception {
-        var userToBeDeleted = userservice.findAll();
+        var userToBeDeleted = userService.findAll();
         String id = userToBeDeleted.get(userToBeDeleted.size() - 1).getId();
         //Request;
         var result = mockmvc.perform(delete("/users/" + id))
                 .andExpect(status().isNoContent())
                 .andReturn();
     }
-
 
 }
