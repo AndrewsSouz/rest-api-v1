@@ -37,7 +37,7 @@ class ApiApplicationTests {
     ObjectMapper objectMapper;
 
     @Autowired
-    MockMvc mockmvc;
+    MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
@@ -72,13 +72,14 @@ class ApiApplicationTests {
     @Test
     void shouldReturnTheCreatedUser() throws Exception {
         //Request;
-        var result = mockmvc.perform(post("/users")
+        var result = this.mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestUserDTO)))
                 .andExpect(status().isCreated())
                 .andReturn();
         //Parsing response and setting the expected response id to the id created by the database;
-        var databaseResponseObject = objectMapper.readValue(result.getResponse().getContentAsString(),
+        var databaseResponseObject = objectMapper
+                .readValue(result.getResponse().getContentAsString(),
                 ControllerResponseUserDTO.class);
         this.responseUserDTO.setId(databaseResponseObject.getId());
         //Parsing the asserts to strings;
@@ -90,7 +91,7 @@ class ApiApplicationTests {
     @Test
     void shouldReturnAllUsersOfDatabase() throws Exception {
         //Request;
-        var result = mockmvc.perform(get("/users"))
+        var result = this.mockMvc.perform(get("/users"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -108,7 +109,7 @@ class ApiApplicationTests {
     @Test
     void shouldReturnUsersThatMatchCriteriaOfDatabase() throws Exception {
         //Request
-        var result = mockmvc.perform(get("/users/Teste"))
+        var result = mockMvc.perform(get("/users/Teste"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -127,7 +128,7 @@ class ApiApplicationTests {
         var userToBeUpdated = userService.findAll();
         String id = userToBeUpdated.get(0).getId();
         //Request;
-        var result = mockmvc.perform(put("/users")
+        var result = this.mockMvc.perform(put("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .param("id", id)
                 .content(objectMapper.writeValueAsString(requestUserDTO)))
@@ -148,9 +149,8 @@ class ApiApplicationTests {
         var userToBeDeleted = userService.findAll();
         String id = userToBeDeleted.get(userToBeDeleted.size() - 1).getId();
         //Request;
-        var result = mockmvc.perform(delete("/users/" + id))
+        var result = mockMvc.perform(delete("/users/" + id))
                 .andExpect(status().isNoContent())
                 .andReturn();
     }
-
 }

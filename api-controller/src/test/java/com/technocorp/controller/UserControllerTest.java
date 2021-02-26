@@ -159,6 +159,4 @@ class UserControllerTest {
         userController.deleteById("1");
         verify(userServiceImpl, times(1)).deleteById("1");
     }
-
-
 }

@@ -2,6 +2,7 @@ package com.technocorp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.technocorp.model.User;
+import com.technocorp.repository.UserRepository;
 import com.technocorp.service.UserServiceImpl;
 import com.technocorp.service.servicedto.ServiceRequestUserDTO;
 import com.technocorp.service.servicedto.ServiceResponseUserDTO;
@@ -13,11 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
@@ -40,6 +44,9 @@ class WebLayerTest {
 
     @MockBean
     UserServiceImpl userServiceImpl;
+
+    @MockBean
+    UserRepository userRepository;
 
 
     @BeforeEach
@@ -76,7 +83,7 @@ class WebLayerTest {
 
     @Test
     @DisplayName("Should return all users in the database.")
-    void findAllShouldReturnAListOfUsersAndStatusOK() throws Exception {
+    void ShouldReturnAListOfUsersAndStatusOK() throws Exception {
         when(this.userServiceImpl.findAll()).thenReturn(Collections.singletonList(this.responseUserDTO));
         this.mockMvc.perform(get("/users"))
                 .andExpect(status().isOk())
@@ -147,7 +154,7 @@ class WebLayerTest {
         when(this.userServiceImpl.update("1", this.requestUserDTO)).thenReturn(this.responseUserDTO);
         this.mockMvc.perform(put("/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .param("id","1")
+                .param("id", "1")
                 .content(json))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -168,5 +175,53 @@ class WebLayerTest {
                 .andExpect(status().isNoContent())
                 .andDo(document("users/delete"));
     }
+
+    @Test
+    void findAllshouldReturnStatusNOCONTENT() throws Exception {
+        var exception = new ResponseStatusException(HttpStatus.NO_CONTENT);
+        doThrow(exception).when(userServiceImpl).findAll();
+        this.mockMvc.perform(get("/users"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void findByNameShouldReturnStatusNOTFOUND() throws Exception {
+        var exception = new ResponseStatusException(HttpStatus.NOT_FOUND);
+        doThrow(exception).when(userServiceImpl).findByName("a");
+        this.mockMvc.perform(get("/users/a"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void saveShouldReturnStatusSERVICEUNAVAILABLE() throws Exception {
+        var json = new ObjectMapper().writeValueAsString(this.requestUserDTO);
+        var exception = new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
+        doThrow(exception).when(userServiceImpl).save(requestUserDTO);
+        this.mockMvc.perform(post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
+    void updateShouldReturnStatusSERVICEUNAVAILABLE() throws Exception {
+        var json = new ObjectMapper().writeValueAsString(this.requestUserDTO);
+        var exception = new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
+        doThrow(exception).when(userServiceImpl).update("1",requestUserDTO);
+        this.mockMvc.perform(put("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("id", "1")
+                .content(json))
+                .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
+    void deleteShouldReturnStatusNOTFOUND() throws Exception {
+        var exception = new ResponseStatusException(HttpStatus.NOT_FOUND);
+        doThrow(exception).when(userServiceImpl).deleteById("99999");
+        this.mockMvc.perform(delete("/users/99999"))
+                .andExpect(status().isNotFound());
+    }
+
 
 }

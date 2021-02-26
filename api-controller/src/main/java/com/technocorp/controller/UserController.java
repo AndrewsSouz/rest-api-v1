@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
-
 @AllArgsConstructor
 @RequestMapping("/users")
 @Api("User Resource")

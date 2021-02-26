@@ -7,7 +7,9 @@ services:
     ports:
       - "9000:9000"
 
-  db:
+  mongodb:
     image:  mongo
     ports:
       - "8081:27017"
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro

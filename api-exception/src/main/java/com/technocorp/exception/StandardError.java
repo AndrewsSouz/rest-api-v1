@@ -6,6 +6,7 @@ import lombok.Data;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+
 @Data
 @Builder
 public class StandardError {
@@ -13,4 +14,5 @@ public class StandardError {
             .format(Calendar.getInstance().getTime());
     private final int status;
     private final String message;
+
 }
