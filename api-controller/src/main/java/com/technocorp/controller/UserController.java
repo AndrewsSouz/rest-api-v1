@@ -19,7 +19,7 @@ import static org.springframework.http.HttpStatus.*;
 @RequestMapping("/users")
 @Api("User Resource")
 @CrossOrigin("http://localhost")
-public class UserController {
+public class UserControllerImpl {
 
     private final UserServiceImpl userServiceImpl;
 
@@ -33,8 +33,7 @@ public class UserController {
             @ApiResponse(code = 204, message = "The resource not exist")
     })
     public List<ControllerResponseUserDTO> listAllUsers() {
-        var serviceResponse = userServiceImpl.findAll();
-        return serviceResponse.stream()
+        return userServiceImpl.findAll().stream()
                 .map(MapperDTO::toControllerResponseUserDTO)
                 .collect(Collectors.toList());
     }
@@ -49,8 +48,7 @@ public class UserController {
             @ApiResponse(code = 204, message = "The resource not exist")
     })
     public List<ControllerResponseUserDTO> findByName(@PathVariable String name) {
-        var serviceResponse = userServiceImpl.findByName(name);
-        return serviceResponse.stream()
+        return userServiceImpl.findByName(name).stream()
                 .map(MapperDTO::toControllerResponseUserDTO)
                 .collect(Collectors.toList());
     }
@@ -58,15 +56,14 @@ public class UserController {
     @PostMapping
     @ResponseStatus(CREATED)
     @ApiOperation("save an user resource")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Succefully retrieved list"),
-            @ApiResponse(code = 403, message = "Forbiddden to access this resource"),
-            @ApiResponse(code = 201, message = "Resource created with sucess")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully retrieved list"),
+            @ApiResponse(code = 403, message = "Forbidden to access this resource"),
+            @ApiResponse(code = 201, message = "Resource created with success")
 
     })
     public ControllerResponseUserDTO save(@RequestBody ControllerRequestUserDTO requestUserDTO) {
-        var response = userServiceImpl
-                .save(MapperDTO.toServiceRequestUserDTO(requestUserDTO));
-        return MapperDTO.toControllerResponseUserDTO(response);
+        return MapperDTO.toControllerResponseUserDTO(
+                userServiceImpl.save(MapperDTO.toServiceRequestUserDTO(requestUserDTO)));
     }
 
     @PutMapping
@@ -75,9 +72,8 @@ public class UserController {
     public ControllerResponseUserDTO update(@ApiParam(value = "the id to update the user", required = true)
                                             @RequestParam(required = true) String id,
                                             @RequestBody ControllerRequestUserDTO requestUserDTO) {
-        var response = userServiceImpl
-                .update(id, MapperDTO.toServiceRequestUserDTO(requestUserDTO));
-        return MapperDTO.toControllerResponseUserDTO(response);
+        return MapperDTO.toControllerResponseUserDTO(userServiceImpl
+                .update(id, MapperDTO.toServiceRequestUserDTO(requestUserDTO)));
     }
 
     @DeleteMapping("/{id}")

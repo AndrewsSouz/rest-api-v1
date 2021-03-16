@@ -15,13 +15,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserControllerTest {
+class UserControllerImplTest {
 
     private ControllerRequestUserDTO requestUserDTO;
     private ControllerResponseUserDTO responseUserDTO;
@@ -32,7 +34,7 @@ class UserControllerTest {
     UserServiceImpl userServiceImpl;
 
     @InjectMocks
-    UserController userController;
+    UserControllerImpl userControllerImpl;
 
     @BeforeEach
     void setup() {
@@ -88,9 +90,9 @@ class UserControllerTest {
     @Test
     @DisplayName("Should return a list of users")
     void whenFindAllshouldReturnAListOfUsers() {
-        when(userServiceImpl.findAll()).thenReturn(Arrays.asList(serviceResponseUserDTO));
-        var stubActual = userController.listAllUsers();
-        var stubExpected = Arrays.asList(this.responseUserDTO).stream()
+        when(userServiceImpl.findAll()).thenReturn(Collections.singletonList(serviceResponseUserDTO));
+        var stubActual = userControllerImpl.listAllUsers();
+        var stubExpected = Stream.of(this.responseUserDTO)
                 .map(dto -> ControllerResponseUserDTO.builder()
                         .id(dto.getId())
                         .name(dto.getName())
@@ -106,9 +108,9 @@ class UserControllerTest {
     @Test
     @DisplayName("Should return a list of users that match the name")
     void whenFindByIdShouldReturnAListOfUsersThatMatchTheName() {
-        when(userServiceImpl.findByName(this.requestUserDTO.getName())).thenReturn(Arrays.asList(serviceResponseUserDTO));
-        var stubActual = userController.findByName(this.requestUserDTO.getName());
-        var stubExpected = Arrays.asList(this.responseUserDTO).stream()
+        when(userServiceImpl.findByName(this.requestUserDTO.getName())).thenReturn(Collections.singletonList(serviceResponseUserDTO));
+        var stubActual = userControllerImpl.findByName(this.requestUserDTO.getName());
+        var stubExpected = Stream.of(this.responseUserDTO)
                 .map(dto -> ControllerResponseUserDTO.builder()
                         .id(dto.getId())
                         .name(dto.getName())
@@ -125,7 +127,7 @@ class UserControllerTest {
     @DisplayName("Should return the saved user")
     void whenSaveShouldReturnTheUserSaved() {
         when(userServiceImpl.save(this.serviceRequestUserDTO)).thenReturn(this.serviceResponseUserDTO);
-        var stubActual = userController.save(this.requestUserDTO);
+        var stubActual = userControllerImpl.save(this.requestUserDTO);
         var stubExpected = ControllerResponseUserDTO.builder()
                 .id(this.serviceResponseUserDTO.getId())
                 .name(this.serviceResponseUserDTO.getName())
@@ -141,7 +143,7 @@ class UserControllerTest {
     @DisplayName("Should return the updated user")
     void whenUpdateShouldReturnTheUserUpdated() {
         when(userServiceImpl.update("1", this.serviceRequestUserDTO)).thenReturn(this.serviceResponseUserDTO);
-        var stubActual = userController.update("1", this.requestUserDTO);
+        var stubActual = userControllerImpl.update("1", this.requestUserDTO);
         var stubExpected = ControllerResponseUserDTO.builder()
                 .id(this.responseUserDTO.getId())
                 .name(this.responseUserDTO.getName())
@@ -156,7 +158,7 @@ class UserControllerTest {
     @Test
     @DisplayName("Should verify if the delete method is acessed")
     void whenDeleteByIdShouldReturnNothing() {
-        userController.deleteById("1");
+        userControllerImpl.deleteById("1");
         verify(userServiceImpl, times(1)).deleteById("1");
     }
 }
