@@ -11,6 +11,7 @@ dependencies {
     implementation project(':api-controller')
     implementation project(':api-service')
     implementation project(':api-persistence')
+    implementation project(':api-util')
     asciidoctor 'org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.5.RELEASE'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 
@@ -123,6 +124,7 @@ project(':api-controller') {
         implementation project(":api-service")
         implementation project(":api-persistence")
         implementation project(":api-exception")
+        implementation project(":api-util")
     }
 
     bootJar {
@@ -159,6 +161,8 @@ project(':api-service') {
     apply plugin: 'jacoco'
 
     dependencies {
+        implementation project(':api-persistence')
+        implementation project(':api-util')
         implementation project(":api-exception")
     }
 
@@ -168,6 +172,18 @@ project(':api-service') {
     jar {
         enabled = true
     }
+
+}
+
+project(':api-util') {
+
+    bootJar {
+        enabled = false
+    }
+    jar {
+        enabled = true
+    }
+
     dependencies {
         implementation project(':api-persistence')
     }

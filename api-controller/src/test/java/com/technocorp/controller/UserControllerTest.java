@@ -1,11 +1,11 @@
 package com.technocorp.controller;
 
-import com.technocorp.controller.dto.ControllerRequestUserDTO;
-import com.technocorp.controller.dto.ControllerResponseUserDTO;
+import com.technocorp.util.dto.ControllerRequestUserDTO;
+import com.technocorp.util.dto.ControllerResponseUserDTO;
 import com.technocorp.model.User;
 import com.technocorp.service.UserServiceImpl;
-import com.technocorp.service.servicedto.ServiceRequestUserDTO;
-import com.technocorp.service.servicedto.ServiceResponseUserDTO;
+import com.technocorp.util.dto.ServiceRequestUserDTO;
+import com.technocorp.util.dto.ServiceResponseUserDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserControllerImplTest {
+class UserControllerTest {
 
     private ControllerRequestUserDTO requestUserDTO;
     private ControllerResponseUserDTO responseUserDTO;
@@ -34,7 +33,7 @@ class UserControllerImplTest {
     UserServiceImpl userServiceImpl;
 
     @InjectMocks
-    UserControllerImpl userControllerImpl;
+    UserController userController;
 
     @BeforeEach
     void setup() {
@@ -91,7 +90,7 @@ class UserControllerImplTest {
     @DisplayName("Should return a list of users")
     void whenFindAllshouldReturnAListOfUsers() {
         when(userServiceImpl.findAll()).thenReturn(Collections.singletonList(serviceResponseUserDTO));
-        var stubActual = userControllerImpl.listAllUsers();
+        var stubActual = userController.listAllUsers();
         var stubExpected = Stream.of(this.responseUserDTO)
                 .map(dto -> ControllerResponseUserDTO.builder()
                         .id(dto.getId())
@@ -109,7 +108,7 @@ class UserControllerImplTest {
     @DisplayName("Should return a list of users that match the name")
     void whenFindByIdShouldReturnAListOfUsersThatMatchTheName() {
         when(userServiceImpl.findByName(this.requestUserDTO.getName())).thenReturn(Collections.singletonList(serviceResponseUserDTO));
-        var stubActual = userControllerImpl.findByName(this.requestUserDTO.getName());
+        var stubActual = userController.findByName(this.requestUserDTO.getName());
         var stubExpected = Stream.of(this.responseUserDTO)
                 .map(dto -> ControllerResponseUserDTO.builder()
                         .id(dto.getId())
@@ -127,7 +126,7 @@ class UserControllerImplTest {
     @DisplayName("Should return the saved user")
     void whenSaveShouldReturnTheUserSaved() {
         when(userServiceImpl.save(this.serviceRequestUserDTO)).thenReturn(this.serviceResponseUserDTO);
-        var stubActual = userControllerImpl.save(this.requestUserDTO);
+        var stubActual = userController.save(this.requestUserDTO);
         var stubExpected = ControllerResponseUserDTO.builder()
                 .id(this.serviceResponseUserDTO.getId())
                 .name(this.serviceResponseUserDTO.getName())
@@ -143,7 +142,7 @@ class UserControllerImplTest {
     @DisplayName("Should return the updated user")
     void whenUpdateShouldReturnTheUserUpdated() {
         when(userServiceImpl.update("1", this.serviceRequestUserDTO)).thenReturn(this.serviceResponseUserDTO);
-        var stubActual = userControllerImpl.update("1", this.requestUserDTO);
+        var stubActual = userController.update("1", this.requestUserDTO);
         var stubExpected = ControllerResponseUserDTO.builder()
                 .id(this.responseUserDTO.getId())
                 .name(this.responseUserDTO.getName())
@@ -158,7 +157,7 @@ class UserControllerImplTest {
     @Test
     @DisplayName("Should verify if the delete method is acessed")
     void whenDeleteByIdShouldReturnNothing() {
-        userControllerImpl.deleteById("1");
+        userController.deleteById("1");
         verify(userServiceImpl, times(1)).deleteById("1");
     }
 }

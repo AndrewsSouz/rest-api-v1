@@ -1,4 +1,4 @@
-package com.technocorp.service.servicedto;
+package com.technocorp.util.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

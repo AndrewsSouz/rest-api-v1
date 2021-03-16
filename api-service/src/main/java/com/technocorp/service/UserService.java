@@ -1,7 +1,7 @@
 package com.technocorp.service;
 
-import com.technocorp.service.servicedto.ServiceRequestUserDTO;
-import com.technocorp.service.servicedto.ServiceResponseUserDTO;
+import com.technocorp.util.dto.ServiceRequestUserDTO;
+import com.technocorp.util.dto.ServiceResponseUserDTO;
 
 import java.util.List;
 

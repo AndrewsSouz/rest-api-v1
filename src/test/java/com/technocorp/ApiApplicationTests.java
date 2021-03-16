@@ -1,22 +1,28 @@
 package com.technocorp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.technocorp.controller.dto.ControllerRequestUserDTO;
-import com.technocorp.controller.dto.ControllerResponseUserDTO;
+import com.technocorp.controller.UserController;
+import com.technocorp.util.dto.ControllerRequestUserDTO;
+import com.technocorp.util.dto.ControllerResponseUserDTO;
 import com.technocorp.model.User;
+import com.technocorp.repository.UserRepository;
 import com.technocorp.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,11 +30,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ContextConfiguration(
+        classes = {ApiApplication.class, UserController.class,
+                UserServiceImpl.class})
 class ApiApplicationTests {
 
     User user;
     ControllerResponseUserDTO responseUserDTO;
     ControllerRequestUserDTO requestUserDTO;
+
+    @MockBean
+    UserRepository userRepository;
 
     @Autowired
     UserServiceImpl userService;
@@ -71,25 +83,30 @@ class ApiApplicationTests {
 
     @Test
     void shouldReturnTheCreatedUser() throws Exception {
+        this.user.setId(null);
+        when(userRepository.save(this.user)).thenReturn(this.user);
+        //stub
         //Request;
         var result = this.mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestUserDTO)))
+                .content(objectMapper.writeValueAsString(this.requestUserDTO)))
                 .andExpect(status().isCreated())
                 .andReturn();
-        //Parsing response and setting the expected response id to the id created by the database;
-        var databaseResponseObject = objectMapper
-                .readValue(result.getResponse().getContentAsString(),
+        //Parsing response and setting the expected response id to the expected id;
+        var databaseResponseObject = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
                 ControllerResponseUserDTO.class);
-        this.responseUserDTO.setId(databaseResponseObject.getId());
+        databaseResponseObject.setId("1");
         //Parsing the asserts to strings;
-        var databaseResponse = result.getResponse().getContentAsString();
+        var databaseResponse = objectMapper.writeValueAsString(databaseResponseObject);
         var expectedResponse = objectMapper.writeValueAsString(this.responseUserDTO);
         assertEquals(expectedResponse, databaseResponse);
     }
 
     @Test
     void shouldReturnAllUsersOfDatabase() throws Exception {
+        //stub
+        when(userRepository.findAll()).thenReturn(List.of(this.user));
         //Request;
         var result = this.mockMvc.perform(get("/users"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -98,7 +115,7 @@ class ApiApplicationTests {
         //Parsing response to a List<object> and setting the expected response object id to the id created by the database;
         var databaseResponseAsObject = Arrays.asList(objectMapper.readValue(result.getResponse().getContentAsString(),
                 ControllerResponseUserDTO[].class));
-        this.responseUserDTO.setId(databaseResponseAsObject.get(0).getId());
+        databaseResponseAsObject.get(0).setId("1");
         //Parsing the asserts to strings;
         var databaseResponse = objectMapper.writeValueAsString(Collections.singletonList(databaseResponseAsObject.get(0)));
         var expectedResponse = objectMapper.writeValueAsString(Collections.singletonList(this.responseUserDTO));
@@ -108,6 +125,8 @@ class ApiApplicationTests {
 
     @Test
     void shouldReturnUsersThatMatchCriteriaOfDatabase() throws Exception {
+        //stub
+        when(userRepository.findByNameIgnoreCaseContaining("Teste")).thenReturn(List.of(this.user));
         //Request
         var result = mockMvc.perform(get("/users/Teste"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -116,7 +135,7 @@ class ApiApplicationTests {
         //Parsing response to a List<object> and setting the expected response object id to the id created by the database;
         var databaseResponseAsObject = Arrays.asList(objectMapper.readValue(result.getResponse().getContentAsString(),
                 ControllerResponseUserDTO[].class));
-        this.responseUserDTO.setId(databaseResponseAsObject.get(0).getId());
+        databaseResponseAsObject.get(0).setId("1");
         //Parsing the asserts to strings;
         var databaseResponse = objectMapper.writeValueAsString(Collections.singletonList(databaseResponseAsObject.get(0)));
         var expectedResponse = objectMapper.writeValueAsString(Collections.singletonList(this.responseUserDTO));
@@ -125,19 +144,20 @@ class ApiApplicationTests {
 
     @Test
     void shouldReturnTheUpdatedUser() throws Exception {
-        var userToBeUpdated = userService.findAll();
-        String id = userToBeUpdated.get(0).getId();
+        //stub
+        when(userRepository.save(this.user)).thenReturn(this.user);
+        when(userRepository.existsById("1")).thenReturn(true);
         //Request;
         var result = this.mockMvc.perform(put("/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .param("id", id)
+                .param("id", "1")
                 .content(objectMapper.writeValueAsString(requestUserDTO)))
                 .andExpect(status().isOk())
                 .andReturn();
         //Parsing response and setting the expected response id to the id created by the database;
         var databaseResponseObject = objectMapper.readValue(result.getResponse().getContentAsString(),
                 ControllerResponseUserDTO.class);
-        this.responseUserDTO.setId(databaseResponseObject.getId());
+        databaseResponseObject.setId("1");
         //Parsing the asserts to strings;
         var databaseResponse = result.getResponse().getContentAsString();
         var expectedResponse = objectMapper.writeValueAsString(this.responseUserDTO);
@@ -146,11 +166,10 @@ class ApiApplicationTests {
 
     @Test
     void shouldDeleteAUserAndReturnNOCONTENT() throws Exception {
-        var userToBeDeleted = userService.findAll();
-        String id = userToBeDeleted.get(userToBeDeleted.size() - 1).getId();
-        //Request;
-        var result = mockMvc.perform(delete("/users/" + id))
+        when(userRepository.existsById("1")).thenReturn(true);
+        mockMvc.perform(delete("/users/" + "1"))
                 .andExpect(status().isNoContent())
                 .andReturn();
+        verify(userRepository, times(1)).deleteById("1");
     }
 }

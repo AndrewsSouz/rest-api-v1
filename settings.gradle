@@ -4,4 +4,5 @@ include 'api-service'
 include 'api-controller'
 include 'api-persistence'
 include 'api-exception'
+include 'api-util'
 
